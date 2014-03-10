@@ -1,39 +1,100 @@
 Trie = function(){
   this.characters = {};
+  this.isWord = false;
 };
 
+// learn('be')
 Trie.prototype.learn = function(word, index){
-  // This function should add the given word,
-  // starting from the given index,
-  // to this Trie.
+    //console.log('learn', this, arguments);
+    var substr = ""; //set empty substring
+    if (typeof index == 'undefined') { //check if index undefined; if so, begin recursion
+        // index is undefined
+        index = 0;
+    }
 
-  // It will be recursive.  It will tell
-  // the correct child of this Trie to learn the word
-  // starting from a later index.
+    substr = word[index]; //checks current letter by index number
+    if (typeof this.characters[substr] == 'undefined') { //initialize new branch
+        this.characters[substr] = new Trie(); //instantiate new trie; potential new record
+    }
 
-  // Consider what the learn function should do
-  // when it reaches the end of the word?
-  // A word does not necessarily end at a leaf.
-  // You must mark nodes which are the ends of words,
-  // so that the words can be reconstructed later.
+    if (( word.length - 1)  == index) { //termination case; if at last index of string
+        this.characters[substr].isWord = true;
+        return;
+    } else {
+        index++;
+        this.learn.apply(this.characters[substr], [word, index]);
+    }
 };
 
+//
+// getWords()
+// getWords([], 'b')
+// getWords([], 'be')
+// getWords([], 'bee')
+// getWords(['bee'], 'bees')
 Trie.prototype.getWords = function(words, currentWord){
-  // This function will return all the words which are
-  // contained in this Trie.
-  // it will use currentWord as a prefix,
-  // since a Trie doesn't know about its parents.
+    // Initialize variables for entering recursion
+    if (typeof words == "undefined") {
+        words = [];
+    }
+
+    if (typeof currentWord == 'undefined') {
+        currentWord = '';
+    }
+
+    // process currentWord
+    var node = this;
+    if (node.isWord) {
+        words.push(currentWord);
+    }
+
+    // start recursion to process children
+    for(var character in node.characters) {
+        if (node.characters.hasOwnProperty(character)) {
+            this.getWords.apply(node.characters[character], [words, currentWord+character]);
+        }
+    }
+
+    return words;
 };
 
 Trie.prototype.find = function(word, index){
-  // This function will return the node in the trie
-  // which corresponds to the end of the passed in word.
+    console.log('find', arguments);
+    var substr = ""; //set empty substring
+    if (typeof index == 'undefined') { //check if index undefined; if so, begin recursion
+        // index is undefined
+        index = 0;
+    }
 
-  // Be sure to consider what happens if the word is not in this Trie.
+    substr = word[index]; //checks current letter by index number
+    if (typeof this.characters[substr] == 'undefined') { //termination code
+        console.log('returning early not defined');
+        return;
+    }
+
+    if (( word.length - 1)  == index) { //termination case; if at last index of string
+        console.log('returning word', this.characters[substr]);
+        return this.characters[substr];
+    } else {
+        index++;
+        //recursive; continue searching for a word
+        return this.find.apply(this.characters[substr], [word, index]);
+    }
 };
 
 Trie.prototype.autoComplete = function(prefix){
-  // This function will return all completions 
+  // This function will return all completions
   // for a given prefix.
   // It should use find and getWords.
+  var foundNode = this.find(prefix);
+  if (typeof foundNode == 'undefined') {
+      return [];
+  }
+
+  var words = foundNode.getWords();
+  for (var idx = 0, len = words.length; idx < len; idx++) {
+      words[idx] = prefix + words[idx];
+  }
+
+  return words;
 };
